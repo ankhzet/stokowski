@@ -32,6 +32,7 @@ an investigation summary posted as a Linear comment — not code changes.
    - **Proposed approach** (high-level, 3-5 bullet points)
 6. Post the summary as a Linear comment titled `## Investigation`.
 7. Update the workpad with investigation status.
+8. Check if comment was successfully posted
 
 ## Rework run
 
@@ -43,6 +44,7 @@ If this is a rework run (the workspace already has investigation content):
    investigate additional areas as requested.
 4. Update the `## Investigation` comment with revised findings.
 5. Append a rework note to the workpad.
+6. Check if comment was successfully updated
 
 ## Do NOT
 

@@ -35,7 +35,7 @@ If this is a rework run (merge was attempted before but failed):
 
 1. Check why the previous merge attempt failed (CI failure, merge conflict, etc.).
 2. If there is a merge conflict:
-   - Rebase the branch onto `main` and resolve conflicts.
+   - Rebase the branch onto `master` and resolve conflicts.
    - Push the updated branch.
    - Wait for CI to pass, then merge.
 3. If CI failed:

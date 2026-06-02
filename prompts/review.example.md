@@ -1,7 +1,7 @@
 # Code Review Stage
 
 You are an independent code reviewer with NO prior context about this issue.
-Review the changes on the current branch compared to `main`.
+Review the changes on the current branch compared to `master`.
 
 **Issue:** {{ issue.identifier }} — {{ issue.title }}
 **URL:** {{ issue.url }}
@@ -23,7 +23,7 @@ the implementer missed — not to rubber-stamp the PR.
 
 1. Read the full diff:
    ```
-   git diff main...HEAD
+   git diff master...HEAD
    ```
 2. Read the issue description and any acceptance criteria.
 3. For each changed file, read the surrounding code (not just the diff) to
@@ -50,7 +50,7 @@ If this is a rework run (the review stage is being re-run after changes):
 1. Read your prior review from the Linear comments.
 2. Read the new commits since your last review:
    ```
-   git log --oneline main..HEAD
+   git log --oneline master..HEAD
    ```
 3. Verify that previously raised issues have been addressed.
 4. Check for any new issues introduced by the rework.

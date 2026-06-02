@@ -22,7 +22,7 @@ Implement the solution, create a PR, and ensure it passes all quality checks.
 
 1. Read the investigation summary from the Linear comments.
 2. Read the relevant source files identified in the investigation.
-3. Create a feature branch from `main`:
+3. Create a feature branch from `master`:
    ```
    git checkout -b {{ issue.identifier | lower }}-<short-description>
    ```
