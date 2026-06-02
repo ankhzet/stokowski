@@ -6,7 +6,13 @@ All notable changes to Stokowski are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- feat: `stokowski-install-service` command for running Stokowski as a launchd LaunchAgent (macOS) or systemd user service (Linux) with auto-start on login, log capture, and crash recovery
+
 ---
+
+## [0.4.0] - 2026-03-23
 
 ## [0.4.0] - 2026-03-23
 

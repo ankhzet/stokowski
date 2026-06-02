@@ -1,0 +1,18 @@
+[Unit]
+Description=Stokowski — Linear-driven Claude Code orchestrator
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=__WORKDIR__
+ExecStart=__PYTHON__ -m stokowski __WORKFLOW__
+Environment="PATH=__PATH__"
+Environment="PYTHONUNBUFFERED=1"
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:__LOGDIR__/stokowski.out.log
+StandardError=append:__LOGDIR__/stokowski.err.log
+
+[Install]
+WantedBy=default.target

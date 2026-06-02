@@ -44,6 +44,7 @@ Built on [OpenAI's Symphony](https://github.com/openai/symphony) spec and taken 
 - [Getting the most out of Stokowski](#getting-the-most-out-of-stokowski)
 - [Architecture](#architecture)
 - [Upgrading](#upgrading)
+- [Running as a system service](#running-as-a-system-service)
 - [Security](#security)
 - [License](#license)
 - [Credits](#credits)
@@ -919,6 +920,93 @@ pip install --upgrade git+https://github.com/Sugar-Coffee/stokowski.git#egg=stok
 ```bash
 git diff HEAD@{1} workflow.example.yaml
 ```
+
+---
+
+## Running as a system service
+
+The `stokowski` CLI is a foreground TUI that needs a real terminal. To run Stokowski as a long-lived background process — auto-starting on login, capturing logs, and restarting on crash — install it as a launchd LaunchAgent (macOS) or systemd user service (Linux) using the bundled installer.
+
+The installer is a separate `stokowski-install-service` command, installed alongside `stokowski` itself:
+
+```bash
+pip install -e ".[web]"   # if not already installed
+stokowski-install-service --help
+```
+
+### Quick start (macOS)
+
+```bash
+cd /path/to/your/repo      # directory containing workflow.yaml
+stokowski-install-service install
+```
+
+This writes `~/Library/LaunchAgents/local.stokowski.daemon.plist` and starts the service. The installer prints a summary showing the unit path, log locations, and `launchctl` commands for management. The dashboard is reachable at the `--port` configured in `workflow.yaml` (default `http://127.0.0.1:4200`).
+
+```bash
+launchctl list | grep stokowski       # confirm it's running
+curl -sf http://127.0.0.1:4200/       # hit the dashboard
+```
+
+### Quick start (Linux)
+
+```bash
+cd /path/to/your/repo
+stokowski-install-service install
+```
+
+This writes `~/.config/systemd/user/stokowski.service`, enables it, and starts it under your user systemd instance. (User-level systemd services don't need root.)
+
+```bash
+systemctl --user status stokowski
+journalctl --user -u stokowski -f
+```
+
+### Inspecting logs
+
+Two log files are written to `~/.local/share/stokowski/logs/`:
+
+```bash
+stokowski-install-service logs --lines 100     # tail both files
+stokowski-install-service logs -f              # follow (Ctrl-C to stop)
+```
+
+The exact path is printed in the install summary table. On Linux, the same content is also available via `journalctl --user -u stokowski`.
+
+### Updating the service
+
+The installer is idempotent — re-run `stokowski-install-service install --force` after upgrading the `stokowski` package to pick up the new code on the next service restart. (The venv's Python interpreter is what the service runs, so `pip install -e ".[web]"` from inside the venv is enough; the service will use the new interpreter on its next start.)
+
+### Uninstalling
+
+```bash
+stokowski-install-service uninstall
+```
+
+This stops the service, removes the unit file, and (on Linux) `systemctl --user reset-failed` to clear any failed-state bookkeeping.
+
+### Multiple instances
+
+Pass `--label <name>` (e.g. `--label local.stokowski.work`) to install a second instance against a different `workflow.yaml`. The label becomes the launchd `Label` (and the systemd unit filename); the file on disk matches the label.
+
+### Customising the Python interpreter
+
+The installer auto-detects your venv in this order:
+
+1. `$VIRTUAL_ENV` if set (a venv is currently activated)
+2. A `.venv` directory at or above the current working directory
+3. The interpreter running `stokowski-install-service` itself
+
+To override, set `$VIRTUAL_ENV` before running the installer, or activate the venv you want the service to use.
+
+### Troubleshooting
+
+- **"workflow file not found"** — pass `--workflow /abs/path/to/workflow.yaml`, or run the command from the directory containing `workflow.yaml`.
+- **"unit file already exists"** — pass `--force` to overwrite, or run `stokowski-install-service uninstall` first.
+- **Service won't start** — read the log file printed in the install summary. On Linux: `journalctl --user -u stokowski -n 100`. The most common cause is `tracker.api_key` not resolving — see below.
+- **`LINEAR_API_KEY` / other env vars don't reach the service** — launchd and systemd do **not** inherit your shell's environment. Put secrets in a `.env` file next to `workflow.yaml` (Stokowski loads it via `_load_dotenv()`), or use the `$VAR` syntax in `workflow.yaml` (e.g. `api_key: $LINEAR_API_KEY`) and set the var via `launchctl setenv LINEAR_API_KEY …` (macOS) or an `EnvironmentFile=` directive in the unit (Linux).
+- **Port 4200 already in use** — set `server.port` in `workflow.yaml`, then `stokowski-install-service install --force`.
+- **System-wide install** — `stokowski-install-service install --system` writes the unit to `/Library/LaunchDaemons/` (macOS) or `/etc/systemd/system/` (Linux). The installer re-execs itself under `sudo`; pass `--no-sudo` if you want to handle elevation yourself.
 
 ---
 

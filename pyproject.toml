@@ -21,7 +21,11 @@ Homepage = "https://github.com/Sugar-Coffee/stokowski"
 Repository = "https://github.com/Sugar-Coffee/stokowski"
 
 [tool.setuptools.packages.find]
-include = ["stokowski*"]
+include = ["stokowski*", "stokowski_install*"]
+
+[tool.setuptools.package-data]
+stokowski_install = ["templates/*"]
 
 [project.scripts]
 stokowski = "stokowski.main:cli"
+stokowski-install-service = "stokowski_install.cli:main"
