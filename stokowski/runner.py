@@ -119,6 +119,13 @@ async def run_codex_turn(
     attempt.last_event_at = datetime.now(timezone.utc)
 
     try:
+        # Align $PWD with the actual child cwd. Without this, bash (e.g. the
+        # `claude` CLI shim) calls getcwd() at startup to validate $PWD and
+        # prints "shell-init: error retrieving current directory: getcwd:
+        # cannot access parent directories" when `..` traversal on the
+        # workspace path is denied (sandbox, stale mount, restrictive perms).
+        sub_env = dict(env) if env else {}
+        sub_env["PWD"] = str(workspace_path)
         proc = await asyncio.create_subprocess_exec(
             *args,
             cwd=str(workspace_path),
@@ -126,7 +133,7 @@ async def run_codex_turn(
             stderr=asyncio.subprocess.PIPE,
             start_new_session=True,
             limit=10 * 1024 * 1024,  # 10MB line buffer (default 64KB)
-            env=env,
+            env=sub_env,
         )
         if on_pid and proc.pid:
             on_pid(proc.pid, True)
@@ -280,6 +287,12 @@ async def run_agent_turn(
     attempt.last_event_at = datetime.now(timezone.utc)
 
     try:
+        # Align $PWD with the actual child cwd. See codex branch above for
+        # the rationale (suppresses bash's "shell-init: error retrieving
+        # current directory" warning when the workspace path's `..` is
+        # denied).
+        sub_env = dict(env) if env else {}
+        sub_env["PWD"] = str(workspace_path)
         proc = await asyncio.create_subprocess_exec(
             *args,
             cwd=str(workspace_path),
@@ -287,7 +300,7 @@ async def run_agent_turn(
             stderr=asyncio.subprocess.PIPE,
             start_new_session=True,
             limit=10 * 1024 * 1024,  # 10MB line buffer (default 64KB)
-            env=env,
+            env=sub_env,
         )
         if on_pid and proc.pid:
             on_pid(proc.pid, True)
