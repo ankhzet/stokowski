@@ -18,6 +18,7 @@ No description provided.
 
 Understand the problem thoroughly before any code is written.  Your output is
 an investigation summary posted as a Linear comment — not code changes.
+Always pull changes from main branch before analysis.
 
 ## First run
 

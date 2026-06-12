@@ -27,6 +27,10 @@ Before starting any implementation work:
 2. Run the project's test command to verify all tests pass.
 3. If either fails, investigate and fix before starting new work.
 
+## Linear
+
+Check if linear mcp is available, for additional functionality.
+
 ## Linear workpad
 
 Use a single Linear comment as a persistent workpad:
