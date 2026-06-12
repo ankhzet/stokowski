@@ -152,3 +152,31 @@ def test_load_template_reads_file(tmp_path):
     f = tmp_path / "tpl.txt"
     f.write_text("__X__-__Y__")
     assert render.load_template(f) == "__X__-__Y__"
+
+
+# ── cli._default_system_bin_paths ───────────────────────────────────────────
+
+
+def test_default_system_bin_paths_darwin():
+    from stokowski_install.cli import _default_system_bin_paths
+    parts = _default_system_bin_paths("darwin")
+    assert "/opt/homebrew/bin" in parts
+    assert "/opt/homebrew/sbin" in parts
+    assert "/usr/local/bin" in parts
+    assert "/usr/local/sbin" in parts
+    assert "/Library/Apple/usr/bin" in parts
+
+
+def test_default_system_bin_paths_linux():
+    from stokowski_install.cli import _default_system_bin_paths
+    parts = _default_system_bin_paths("linux")
+    assert "/usr/local/sbin" in parts
+    assert "/usr/local/bin" in parts
+    # Linux must not inherit the macOS Homebrew paths.
+    assert "/opt/homebrew/bin" not in parts
+    assert "/Library/Apple/usr/bin" not in parts
+
+
+def test_default_system_bin_paths_unknown_empty():
+    from stokowski_install.cli import _default_system_bin_paths
+    assert _default_system_bin_paths("plan9") == []

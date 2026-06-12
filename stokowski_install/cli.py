@@ -172,19 +172,53 @@ def _resolve_workflow(args: argparse.Namespace) -> Path:
     return detected
 
 
-def _build_substitutions(workflow: Path, label: str, wrapper: Path | None) -> dict[str, str]:
+def _default_system_bin_paths(plat: str) -> list[str]:
+    """Return platform-specific bin directories that should always be on PATH.
+
+    These are added even when the install-time shell PATH did not contain
+    them — common when ``stokowski-install-service`` is invoked from a
+    context that has not sourced Homebrew's shellenv (e.g. a fresh
+    terminal before brew init, or a non-interactive parent). They mirror
+    what ``path_helper`` and Homebrew's login shellenv add.
+    """
+    if plat == "darwin":
+        return [
+            "/opt/homebrew/bin",
+            "/opt/homebrew/sbin",
+            "/usr/local/bin",
+            "/usr/local/sbin",
+            "/Library/Apple/usr/bin",
+        ]
+    if plat == "linux":
+        return [
+            "/usr/local/sbin",
+            "/usr/local/bin",
+        ]
+    return []
+
+
+def _build_substitutions(
+    workflow: Path, label: str, wrapper: Path | None, plat: str,
+) -> dict[str, str]:
     workdir = workflow.parent.resolve()
     logdir = paths.resolve_logdir()
     python = paths.resolve_venv_python()
     # Build the daemon's PATH: venv bin first, then the user's ~/.local/bin
-    # (where the `claude` CLI lives), then whatever PATH the install-time
-    # shell has so npm/nvm/pnpm/fnm shims resolve.
+    # (where the `claude` CLI lives), then platform-default Homebrew/local
+    # bin dirs (always — install-time PATH may be missing them), then
+    # whatever PATH the install-time shell has so npm/nvm/pnpm/fnm shims
+    # resolve.
     venv_bin = str(python.parent)
     local_bin = str(Path.home() / ".local" / "bin")
     system_path = os.environ.get("PATH", "")
     seen: set[str] = set()
     path_parts: list[str] = []
-    for part in [venv_bin, local_bin, *system_path.split(":")]:
+    for part in [
+        venv_bin,
+        local_bin,
+        *_default_system_bin_paths(plat),
+        *system_path.split(":"),
+    ]:
         if part and part not in seen:
             seen.add(part)
             path_parts.append(part)
@@ -266,7 +300,7 @@ def _install(args: argparse.Namespace) -> int:
         console.print(f"[green]wrote[/green] {wrapper}")
 
     tpl = render.load_template(_template_path(plat))
-    subs = _build_substitutions(workflow, label, wrapper)
+    subs = _build_substitutions(workflow, label, wrapper, plat)
     rendered = render.render_template(tpl, subs)
 
     unit_path = paths.unit_path(plat, label, system=args.system)
